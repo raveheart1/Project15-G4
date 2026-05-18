@@ -1,21 +1,8 @@
 import logging
 
 from flask import Flask
-from flask_migrate import MigrateCommand
-from flask_script import Manager
 
 from elephantcallscounter import db, migrate
-from elephantcallscounter.application.api.blob_events import blob_blueprint
-from elephantcallscounter.application.api.elephants_view import \
-    elephant_blueprint
-from elephantcallscounter.management.commands.data_analysis_commands import \
-    data_analysis
-from elephantcallscounter.management.commands.data_import_commands import \
-    data_import
-from elephantcallscounter.management.commands.data_processing_commands import \
-    data_processing
-from elephantcallscounter.management.commands.event_commands import events
-from elephantcallscounter.management.commands.pipeline_commands import demo
 from elephantcallscounter.utils.path_utils import get_project_root, join_paths
 
 
@@ -48,7 +35,7 @@ def setup_logging():
     logger.addHandler(ch)
 
 
-def create_app():
+def create_app(config_overrides=None, register_cli=True, register_blob_events=True):
     setup_logging()
     app = Flask(__name__, template_folder="application/templates/")
     app.config.update(
@@ -58,6 +45,9 @@ def create_app():
             "DEBUG": True,
         }
     )
+    if config_overrides:
+        app.config.update(config_overrides)
+
     db.init_app(app)
     migrate.init_app(
         app,
@@ -66,15 +56,39 @@ def create_app():
             [get_project_root(), "application/persistence/migrations"]
         ),
     )
-    manager = Manager(app)
-    manager.add_command("db", MigrateCommand)
-    app.register_blueprint(data_analysis)
-    app.register_blueprint(data_import)
-    app.register_blueprint(data_processing)
-    app.register_blueprint(demo)
-    app.register_blueprint(events)
+
+    if register_cli:
+        from flask_migrate import MigrateCommand
+        from flask_script import Manager
+
+        from elephantcallscounter.management.commands.data_analysis_commands import (
+            data_analysis,
+        )
+        from elephantcallscounter.management.commands.data_import_commands import (
+            data_import,
+        )
+        from elephantcallscounter.management.commands.data_processing_commands import (
+            data_processing,
+        )
+        from elephantcallscounter.management.commands.event_commands import events
+        from elephantcallscounter.management.commands.pipeline_commands import demo
+
+        manager = Manager(app)
+        manager.add_command("db", MigrateCommand)
+        app.register_blueprint(data_analysis)
+        app.register_blueprint(data_import)
+        app.register_blueprint(data_processing)
+        app.register_blueprint(demo)
+        app.register_blueprint(events)
+
     # api blueprints
+    from elephantcallscounter.application.api.elephants_view import elephant_blueprint
+
     app.register_blueprint(elephant_blueprint)
-    app.register_blueprint(blob_blueprint)
+
+    if register_blob_events:
+        from elephantcallscounter.application.api.blob_events import blob_blueprint
+
+        app.register_blueprint(blob_blueprint)
 
     return app

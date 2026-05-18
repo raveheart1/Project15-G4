@@ -12,8 +12,9 @@ class Boxing:
     def same_elephant(rumble1, rumble2):
         """
         Compare two rumbles and determine whether they belong to the same elephant.
-        Each rumble is in the (x,y) format where x is the middle time of the box, y is the middle frequency.
-        We compare the distances in square roots; more distance is more likely to be a different elephant.
+        Each rumble is in the (x,y) format where x is the middle time of the box,
+        y is the middle frequency. We compare the distances in square roots; more
+        distance is more likely to be a different elephant.
         :return: True if the rumbles belong the same elephant, False if not
         """
         print(f"comparing rumbles {rumble1} and {rumble2}...")
@@ -65,7 +66,8 @@ class Boxing:
         for i, c in enumerate(contours):
             polygon = cv2.approxPolyDP(c, 3, True)
             boxes[i] = cv2.boundingRect(polygon)
-            # (x, y, w, h), where x, y is the top left corner, and w, h are the width and height respectively
+            # (x, y, w, h), where x, y is the top left corner and w, h
+            # are the width and height respectively.
 
             rect = boxes[i]
             width = rect[2]
@@ -108,16 +110,17 @@ class Boxing:
 
         # put the ROI on top of the original image
         h, w = ROI.shape[0], ROI.shape[1]
-        image[y_top: y_top + h, x_left: x_left + w] = ROI
+        image[y_top : y_top + h, x_left : x_left + w] = ROI
 
         boxed_path = (
-                self.target_folder
-                + str(len(elephants))
-                + "_"
-                + image_filename.replace("mono_", "boxed_")
+            self.target_folder
+            + str(len(elephants))
+            + "_"
+            + image_filename.replace("mono_", "boxed_")
         )
         cv2.imwrite(boxed_path, image)
         print(f"Boxed image stored as {boxed_path}")
+
 
 # b = Boxing('../data/spectrograms/mono/', '../data/spectrograms/boxed2/')
 # b.create_contours_and_boxes('mono_nn01d_20180730_000000.wav_segment_366_nan.wav.png')

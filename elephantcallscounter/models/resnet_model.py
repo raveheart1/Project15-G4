@@ -1,10 +1,6 @@
 import logging
 
-import matplotlib.pyplot as plt
-import tensorflow as tf
-from sklearn import metrics
-from tensorflow import keras
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import numpy as np
 
 from elephantcallscounter.utils.path_utils import get_project_root, join_paths
 
@@ -17,10 +13,14 @@ class ElephantCounterResnet:
         self.epochs = epochs
         self.model_save_loc = model_name + str(epochs) + "_epoch"
         self.training_loc = training_loc
+        from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
         self.datagen = ImageDataGenerator()
 
     @staticmethod
     def _generate_res_model():
+        from tensorflow import keras
+
         input_t = keras.Input(shape=(224, 224, 3))
         res_model = keras.applications.ResNet50(
             include_top=False, weights="imagenet", input_tensor=input_t
@@ -42,6 +42,9 @@ class ElephantCounterResnet:
         return train_it, val_it, test_it
 
     def custom_sequential_model(self):
+        import tensorflow as tf
+        from tensorflow import keras
+
         for layer in self.res_model.layers[:143]:
             layer.trainable = False
 
@@ -70,9 +73,20 @@ class ElephantCounterResnet:
 
     @staticmethod
     def load_model(model_save_loc):
+        from tensorflow import keras
+
         return keras.models.load_model(join_paths([get_project_root(), model_save_loc]))
 
+    @staticmethod
+    def predict_classes(model, data_it):
+        predictions = model.predict(data_it)
+        return np.asarray(predictions).argmax(axis=1)
+
     def build_model(self):
+        import matplotlib.pyplot as plt
+        from sklearn import metrics
+        from tensorflow import keras
+
         train_it, val_it, test_it = self.get_train_test_set(self.training_loc)
         try:
             model = self.load_model(self.model_save_loc)
@@ -100,19 +114,17 @@ class ElephantCounterResnet:
                 join_paths([get_project_root(), self.model_save_loc, "graph.png"])
             )
 
-        pred = model.predict_classes(test_it)
+        pred = self.predict_classes(model, test_it)
         logger.info(metrics.confusion_matrix(test_it.labels, pred))
-        test_loss, test_acc = model.evaluate(test_it, verbose=2)
+        _, test_acc = model.evaluate(test_it, verbose=2)
 
         logger.info(test_acc)
 
     def run_model(self, dir_path):
         data_it = self.get_dataset_it(join_paths([get_project_root(), dir_path]))
         try:
-            model = self.load_model(
-                join_paths([get_project_root(), self.model_save_loc])
-            )
+            model = self.load_model(self.model_save_loc)
         except OSError:
             logger.info("model {} not loaded".format(self.model_save_loc))
         else:
-            return model.predict_classes(data_it)
+            return self.predict_classes(model, data_it)
