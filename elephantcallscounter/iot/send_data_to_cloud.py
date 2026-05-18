@@ -60,7 +60,7 @@ async def write_to_hub(
                     logger.info("Quitting...")
                     logger.info("File limit reached %s", str(limit))
                     break
-            except EOFError as e:
+            except EOFError:
                 time.sleep(10000)
 
     tasks = asyncio.gather(send_spectrogram(counter))

@@ -26,9 +26,6 @@ def find_matches(img, template):
     :return list:
     """
 
-    # read height and width of template image
-    w, h = template.shape[0], template.shape[1]
-
     res = cv2.matchTemplate(img, template, cv2.TM_CCOEFF_NORMED)
     threshold = 0.7
     loc = np.where(res > threshold)

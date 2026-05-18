@@ -3,7 +3,6 @@ import logging
 import librosa
 import numpy as np
 import scipy
-from librosa import display
 from matplotlib import pyplot as plt
 
 plt.rcParams["agg.path.chunksize"] = 10000
@@ -132,7 +131,11 @@ class Plots:
         db_spectrogram = librosa.power_to_db(spectrogram, ref=np.max)
 
         librosa.display.specshow(
-            db_spectrogram, sr=sr, hop_length=self.hop_length, x_axis="time", y_axis="mel"
+            db_spectrogram,
+            sr=sr,
+            hop_length=self.hop_length,
+            x_axis="time",
+            y_axis="mel",
         )
         plt.title("Mel Spectrogram")
         plt.colorbar(format="%+2.0f dB")

@@ -46,12 +46,6 @@ class AmazonInterface:
         metadata_test = pd.read_csv(metadata_test_filepath, sep="\t", header=0)
         test_filenames = metadata_test["filename"]
 
-        slack_time = (
-            3000  # the amount of milliseconds before and after each interesting segment
-        )
-        train_or_test = ""
-        metadata = None
-
         for key in files:
             try:
                 path = key["Key"]
@@ -64,20 +58,8 @@ class AmazonInterface:
                         self.download_s3_file(path, filename)
 
                         if segment_files:
-                            if train_filenames.str.contains(filename).any():
-                                train_or_test = "train"
-                                metadata = metadata_train
-                            elif test_filenames.str.contains(filename).any():
-                                train_or_test = "train"
-                                metadata = metadata_test
-
-                            fs.segment_file(
-                                filename,
-                                metadata,
-                                slack_time,
-                                train_or_test,
-                                False,
-                                True,
+                            raise NotImplementedError(
+                                "segment_files=True is not supported by AmazonInterface"
                             )
 
                         if delete_data:

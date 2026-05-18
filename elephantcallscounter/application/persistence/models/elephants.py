@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy import Column, DateTime, Float, Integer, Text
 
-from elephantcallscounter.app_factory import db
+from elephantcallscounter import db
 
 logger = logging.getLogger(__name__)
 

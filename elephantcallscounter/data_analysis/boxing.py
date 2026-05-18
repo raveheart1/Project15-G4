@@ -2,9 +2,6 @@ import logging
 import math
 import os
 
-import cv2
-import pandas as pd
-
 from elephantcallscounter.utils.path_utils import get_project_root, join_paths
 
 logger = logging.getLogger(__name__)
@@ -12,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Boxing:
     def __init__(
-            self, image_folder, target_folder, csv_file_path, monochrome, write_file=False
+        self, image_folder, target_folder, csv_file_path, monochrome, write_file=False
     ):
         self.image_folder = image_folder
         self.target_folder = target_folder
@@ -21,6 +18,8 @@ class Boxing:
         self.write_file = write_file
 
     def write_box_to_file(self, image, elephants, image_filename):
+        import cv2
+
         image_filename = image_filename.replace("mono_", "boxed_")
         os.makedirs(
             join_paths([self.target_folder, str(len(elephants))]), exist_ok=True
@@ -32,6 +31,8 @@ class Boxing:
         logger.info(f"Boxed image stored as {boxed_path}")
 
     def create_boxes(self, image_filename):
+        import cv2
+
         logger.info(f"Creating boxes for {self.image_folder + image_filename}...")
 
         image = self.monochrome.create_monochrome(
@@ -92,8 +93,8 @@ class Boxing:
             similar_rumbles = list(
                 filter(
                     lambda elephant: (
-                            (abs(elephant[0] - rumble[0]) < 20)
-                            or (abs(elephant[1] - rumble[1]) < 200)
+                        (abs(elephant[0] - rumble[0]) < 20)
+                        or (abs(elephant[1] - rumble[1]) < 200)
                     ),
                     elephants,
                 )
@@ -110,7 +111,7 @@ class Boxing:
 
         # put the ROI on top of the original image
         h, w = ROI.shape[0], ROI.shape[1]
-        image[y_top: y_top + h, x_left: x_left + w] = ROI
+        image[y_top : y_top + h, x_left : x_left + w] = ROI
 
         if self.write_file:
             self.write_box_to_file(image, elephants, image_filename)
@@ -118,5 +119,6 @@ class Boxing:
         return image, len(elephants)
 
     def write_labels_to_csv_file(self, dataset):
-        df = pd.DataFrame(dataset.items(), columns=["file_name", "number_of_elephants"])
-        df.to_csv(self.csv_file_path)
+        labels = dataset.copy()
+        labels.columns = ["file_name", "number_of_elephants"]
+        labels.to_csv(self.csv_file_path, index=False)

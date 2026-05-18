@@ -1,8 +1,5 @@
 import logging
 
-import librosa
-import pydub
-
 logger = logging.getLogger(__name__)
 
 
@@ -22,6 +19,8 @@ class AudioProcessing:
         :type destination_file: string
         :return int:
         """
+        import pydub
+
         try:
             song = pydub.AudioSegment.from_wav(file_name)
             extract = song[start_sec:end_sec]
@@ -40,6 +39,8 @@ class AudioProcessing:
         :return: tuple
         """
         # Keeping audio at original sample rate
+        import librosa
+
         signal, sr = librosa.load(file_name, sr=sr)
         logger.info("Duration of samples {}s".format(len(signal) / sr))
         return signal, sr

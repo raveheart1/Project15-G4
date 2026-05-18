@@ -1,5 +1,3 @@
-version: "3.8"
-
 x-environment-variables: &environment-variables
   - STORAGE_ACCOUNT_SAS_KEY=${STORAGE_ACCOUNT_SAS_KEY}
   - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}

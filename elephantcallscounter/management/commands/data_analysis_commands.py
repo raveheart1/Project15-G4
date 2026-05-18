@@ -3,13 +3,17 @@ import os
 import click
 from flask import Blueprint
 
-from elephantcallscounter.models.resnet_model import ElephantCounterResnet
-from elephantcallscounter.models.vgg_model import ElephantCounterVGG
 from elephantcallscounter.services.data_analysis_service import (
-    analyse_sound_data, create_mono_spectrograms, find_elephants_in_images,
-    run_cnn)
-from elephantcallscounter.utils.path_utils import (get_project_root,
-                                                   join_paths, split_file_path)
+    analyse_sound_data,
+    create_mono_spectrograms,
+    find_elephants_in_images,
+    run_cnn,
+)
+from elephantcallscounter.utils.path_utils import (
+    get_project_root,
+    join_paths,
+    split_file_path,
+)
 
 data_analysis = Blueprint("data_analysis", __name__)
 
@@ -87,6 +91,8 @@ def find_elephants_command(context, dir_name, dest_folder, csv_file_path):
 @click.argument("training_loc")
 @click.argument("model_name", default="binaries/resnet_")
 def train_cnn(training_loc, model_name):
+    from elephantcallscounter.models.resnet_model import ElephantCounterResnet
+
     elephant_counter_resnet = ElephantCounterResnet(
         training_loc=join_paths([get_project_root(), training_loc]),
         model_name=model_name,
@@ -97,6 +103,8 @@ def train_cnn(training_loc, model_name):
 @data_analysis.cli.command("train_vgg_cnn")
 @click.argument("training_loc")
 def train_vgg_cnn(training_loc):
+    from elephantcallscounter.models.vgg_model import ElephantCounterVGG
+
     elephant_counter_vgg = ElephantCounterVGG(
         training_loc=join_paths([get_project_root(), training_loc])
     )
@@ -106,5 +114,5 @@ def train_vgg_cnn(training_loc):
 @data_analysis.cli.command("run_cnn")
 @click.argument("model_name")
 @click.argument("dir_path")
-def run_cnn_command(dir_path, model_name):
-    run_cnn(dir_path, model_name)
+def run_cnn_command(model_name, dir_path):
+    run_cnn(model_name, dir_path)
