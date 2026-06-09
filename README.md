@@ -114,6 +114,29 @@ foo@bar:~ flake8 elephantcallscounter
 Integration tests (which require external services and large assets) are marked
 `integration` and excluded by default via `pytest.ini`.
 
+# Evaluation & dataset audit
+The repository ships the boxed output images under
+`elephantcallscounter/data/spectrogram_bb/{0,1,2}/`, sorted into folders by the
+counting algorithm's predicted count. The `elephantcallscounter.evaluation`
+package provides cloud-free tools to inspect and validate this dataset (no
+credentials required):
+```bash
+# Class distribution of the shipped boxed dataset
+foo@bar:~ python -m elephantcallscounter.evaluation.dataset_audit summarize
+
+# Check the committed labels CSV against the folder structure
+foo@bar:~ python -m elephantcallscounter.evaluation.dataset_audit audit
+
+# Regenerate a clean file_name,number_of_elephants labels CSV
+foo@bar:~ python -m elephantcallscounter.evaluation.dataset_audit rebuild-labels
+```
+**Note on accuracy:** the source annotations record call frequency and Cornell's
+"marginal" confidence tags but not a ground-truth elephant count per segment, and
+the repository does not ship the input spectrograms. A true accuracy figure
+therefore cannot be reproduced from this repository alone. `score_predictions`
+in that package is a ready hook to compute accuracy/precision against a
+ground-truth label set if one becomes available.
+
 # Flask APP:
 - To run the code outside docker just skip the 'docker exec -it ecc' part.
 - To run the app.
