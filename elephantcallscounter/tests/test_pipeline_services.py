@@ -27,6 +27,7 @@ def test_run_pipeline_orchestrates_processing_without_publishing(monkeypatch):
 
     def fake_find_elephants_in_images(dir_name, dest_folder, csv_file_path):
         calls["find"].append((dir_name, dest_folder, csv_file_path))
+        return [1]
 
     def fake_run_cnn(model_name, dir_path):
         calls["run_cnn"].append((model_name, dir_path))
@@ -59,3 +60,31 @@ def test_run_pipeline_orchestrates_processing_without_publishing(monkeypatch):
     assert calls["mono"][0][2] is True
     assert calls["find"][0][2].endswith("data/demo/test_spec_image_labels.csv")
     assert calls["run_cnn"] == [("binaries/resnet", "data/demo/spectrogram_bb")]
+
+
+def test_run_pipeline_falls_back_to_boxing_counts_without_model(monkeypatch):
+    """When no trained CNN model is available, run_cnn returns None and the
+    pipeline should fall back to the rule-based boxing counts."""
+
+    def fake_get_files_in_dir(path):
+        if path == "data/demo/spectrogram":
+            return ["spec_image_nn01d.png"]
+        return ["nn01d_20180127_000000.wav"]
+
+    monkeypatch.setattr(pipeline_services, "get_files_in_dir", fake_get_files_in_dir)
+    monkeypatch.setattr(pipeline_services, "analyse_sound_data", lambda **kwargs: None)
+    monkeypatch.setattr(
+        pipeline_services, "create_mono_spectrograms", lambda *a, **k: None
+    )
+    monkeypatch.setattr(
+        pipeline_services, "find_elephants_in_images", lambda *a, **k: [2]
+    )
+    monkeypatch.setattr(pipeline_services, "run_cnn", lambda *a, **k: None)
+
+    value = pipeline_run(
+        "tests/test_fixtures",
+        "data/demo/test_spec_image_labels.csv",
+        publish_results=False,
+    )
+
+    assert value == [2]

@@ -34,14 +34,27 @@ def pipeline_run(
         target_folder=join_paths([get_project_root(), "data/demo/spectrogram_mono"]),
         write_file=True,
     )
-    find_elephants_in_images(
+    # The rule-based boxing algorithm always produces a count per spectrogram.
+    box_counts = find_elephants_in_images(
         join_paths([get_project_root(), "data/demo/spectrogram_mono"]),
         join_paths([get_project_root(), "data/demo/spectrogram_bb"]),
         join_paths([get_project_root(), csv_file_path]),
     )
-    value = run_cnn("binaries/resnet", "data/demo/spectrogram_bb")
+    # The CNN is an optional classifier that overrides the rule-based counts
+    # only when a trained model is available; otherwise we fall back to boxing.
+    cnn_counts = run_cnn("binaries/resnet", "data/demo/spectrogram_bb")
+    if cnn_counts is None:
+        logger.info("No trained CNN model found; using rule-based boxing counts.")
+        value = box_counts
+    else:
+        value = list(cnn_counts)
     for index, file_path in enumerate(get_files_in_dir(folder_path)):
         if not publish_results:
+            continue
+        if index >= len(value):
+            logger.warning(
+                "No count produced for %s; skipping publish.", file_path
+            )
             continue
 
         file_name = file_path.split("/")[-1]

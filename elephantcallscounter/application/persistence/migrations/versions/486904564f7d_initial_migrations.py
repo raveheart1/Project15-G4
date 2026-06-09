@@ -25,7 +25,7 @@ def upgrade():
         sa.Column("longitude", sa.Float(), nullable=True),
         sa.Column("start_time", sa.DateTime(), nullable=True),
         sa.Column("end_time", sa.DateTime(), nullable=True),
-        sa.Column("device_id", sa.Integer(), nullable=False),
+        sa.Column("device_id", sa.Text(), nullable=False),
         sa.Column("number_of_elephants", sa.Integer(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )

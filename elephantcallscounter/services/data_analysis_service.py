@@ -25,10 +25,13 @@ def analyse_sound_data(file_path, dest_path):
 def find_elephants_in_images(dir_name, dest_folder, csv_file_path):
     """Analyse the spectrograms and generate the bounding box images.
 
+    Runs the rule-based boxing algorithm over every spectrogram and writes the
+    resulting ``file_name,number_of_elephants`` labels to ``csv_file_path``.
+
     :param str dir_name:
     :param str dest_folder:
     :param str csv_file_path:
-    :return:
+    :return list[int]: the elephant count for each processed image, in order.
     """
     import pandas as pd
 
@@ -44,6 +47,8 @@ def find_elephants_in_images(dir_name, dest_folder, csv_file_path):
 
     dataset = pd.DataFrame(boxed_metadata)
     boxing.write_labels_to_csv_file(dataset)
+
+    return [number_of_elephants for _file, number_of_elephants in boxed_metadata]
 
 
 def box_single_file(image_filename):

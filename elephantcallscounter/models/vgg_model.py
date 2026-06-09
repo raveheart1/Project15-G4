@@ -1,6 +1,7 @@
 import logging
 
 import matplotlib.pyplot as plt
+import numpy as np
 import tensorflow as tf
 from sklearn import metrics
 from tensorflow import keras
@@ -68,6 +69,11 @@ class ElephantCounterVGG:
     def load_model(model_save_loc):
         return keras.models.load_model(join_paths([get_project_root(), model_save_loc]))
 
+    @staticmethod
+    def predict_classes(model, data_it):
+        predictions = model.predict(data_it)
+        return np.asarray(predictions).argmax(axis=1)
+
     def build_model(self):
         train_it, val_it, test_it = self.get_train_test_set(self.training_loc)
         try:
@@ -77,7 +83,7 @@ class ElephantCounterVGG:
 
             model.compile(
                 loss="categorical_crossentropy",
-                optimizer=keras.optimizers.RMSprop(lr=1e-4),
+                optimizer=keras.optimizers.RMSprop(learning_rate=1e-4),
                 metrics=["accuracy"],
             )
 
@@ -92,7 +98,7 @@ class ElephantCounterVGG:
             plt.legend(loc="lower right")
             plt.savefig(join_paths([get_project_root(), "graph.png"]))
 
-        pred = model.predict_classes(test_it)
+        pred = self.predict_classes(model, test_it)
         logger.info(metrics.confusion_matrix(test_it.labels, pred))
         test_loss, test_acc = model.evaluate(test_it, verbose=2)
 
@@ -105,4 +111,4 @@ class ElephantCounterVGG:
         except OSError:
             logger.info("model {} not loaded".format(self.model_save_loc))
         else:
-            return model.predict_classes(data_it)
+            return self.predict_classes(model, data_it)
