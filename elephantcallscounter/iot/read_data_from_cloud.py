@@ -26,10 +26,16 @@ class ReadDataFromCloud:
     async def on_event_batch(self, partition_context, events):
         for event in events:
             logger.info("Got new event to process!")
-            event_data = ast.literal_eval(event.body_as_str())
-            logger.info("Received file name in queue: %s", event_data["filename"])
+            try:
+                event_data = ast.literal_eval(event.body_as_str())
+                filename = event_data["filename"]
+            except (ValueError, SyntaxError, KeyError, TypeError):
+                # Skip malformed events instead of aborting the whole batch.
+                logger.exception("Skipping malformed event: %s", event)
+                continue
+            logger.info("Received file name in queue: %s", filename)
             self.audio_events_queue.insert_message_queue(
-                join_paths([self.dest_folder, event_data["filename"]])
+                join_paths([self.dest_folder, filename])
             )
 
         if self.flag["finished"]:

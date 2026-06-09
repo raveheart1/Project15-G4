@@ -38,18 +38,27 @@ async def write_to_hub(
         sleep_interval = 5
         while True:
             for f in list_of_files:
-                payload = json.dumps(
-                    {"capturedate": time.time(), "filename": f, "finished": "False"}
-                )
-                azure_interface = AzureInterface(container_name)
-                azure_interface.send_to_azure(
-                    join_paths([source_path, f]), dest_folder, f, media_file=True
-                )
-                msg = build_message(payload)
-                await device_client.send_message(msg)
-                logger.info("done sending file " + str(f))
-                counter["count"] += 1
-                logger.info(counter["count"])
+                try:
+                    payload = json.dumps(
+                        {
+                            "capturedate": time.time(),
+                            "filename": f,
+                            "finished": "False",
+                        }
+                    )
+                    azure_interface = AzureInterface(container_name)
+                    azure_interface.send_to_azure(
+                        join_paths([source_path, f]), dest_folder, f, media_file=True
+                    )
+                    msg = build_message(payload)
+                    await device_client.send_message(msg)
+                    logger.info("done sending file " + str(f))
+                    counter["count"] += 1
+                    logger.info(counter["count"])
+                except Exception:
+                    # Don't let one failed upload/send abort the whole run;
+                    # log and continue with the next file.
+                    logger.exception("Failed to send file %s; skipping.", f)
                 await asyncio.sleep(sleep_interval)
 
     # Define behavior for halting the application
@@ -63,16 +72,19 @@ async def write_to_hub(
             except EOFError:
                 time.sleep(10000)
 
-    tasks = asyncio.gather(send_spectrogram(counter))
+    try:
+        tasks = asyncio.gather(send_spectrogram(counter))
 
-    # Run the stdin listener in the event loop
-    loop = asyncio.get_running_loop()
-    user_finished = loop.run_in_executor(None, stdin_listener, counter, limit)
+        # Run the stdin listener in the event loop
+        loop = asyncio.get_running_loop()
+        user_finished = loop.run_in_executor(None, stdin_listener, counter, limit)
 
-    # Wait for user to indicate they are done listening for method calls
-    await user_finished
+        # Wait for user to indicate they are done listening for method calls
+        await user_finished
 
-    # Cancel tasks
-    tasks.add_done_callback(lambda r: r.exception())
-    tasks.cancel()
-    await device_client.disconnect()
+        # Cancel tasks
+        tasks.add_done_callback(lambda r: r.exception())
+        tasks.cancel()
+    finally:
+        # Always release the device connection, even on error.
+        await device_client.disconnect()
