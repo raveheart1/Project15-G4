@@ -1,4 +1,4 @@
-FROM python:3.7.6-slim
+FROM python:3.11-slim
 
 ARG WORKING_DIR=/usr/src/app
 

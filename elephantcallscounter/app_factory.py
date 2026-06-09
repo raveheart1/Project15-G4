@@ -58,9 +58,6 @@ def create_app(config_overrides=None, register_cli=True, register_blob_events=Tr
     )
 
     if register_cli:
-        from flask_migrate import MigrateCommand
-        from flask_script import Manager
-
         from elephantcallscounter.management.commands.data_analysis_commands import (
             data_analysis,
         )
@@ -73,8 +70,10 @@ def create_app(config_overrides=None, register_cli=True, register_blob_events=Tr
         from elephantcallscounter.management.commands.event_commands import events
         from elephantcallscounter.management.commands.pipeline_commands import demo
 
-        manager = Manager(app)
-        manager.add_command("db", MigrateCommand)
+        # The blueprints expose their CLI commands via Flask's native
+        # ``flask <blueprint> <command>`` interface, and Flask-Migrate
+        # registers the ``flask db`` command group on init_app, so the old
+        # Flask-Script Manager/MigrateCommand glue is no longer needed.
         app.register_blueprint(data_analysis)
         app.register_blueprint(data_import)
         app.register_blueprint(data_processing)

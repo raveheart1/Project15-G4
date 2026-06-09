@@ -55,7 +55,8 @@ class Plots:
         :return:
         """
         logger.info("Plotting loudness...")
-        librosa.display.waveplot(y=samples, sr=sampling_rate)
+        # waveplot was renamed to waveshow in librosa 0.9.
+        librosa.display.waveshow(y=samples, sr=sampling_rate)
 
         if plot:
             plt.xlabel("Time (ms)")
@@ -78,7 +79,7 @@ class Plots:
         """
         logger.info(f"Plotting and saving spectrogram for {file_location}...")
 
-        stft_value = librosa.core.stft(
+        stft_value = librosa.stft(
             input_data, n_fft=self.n_fft, hop_length=self.hop_length
         )
         spectrogram = np.abs(stft_value)
@@ -120,8 +121,9 @@ class Plots:
         """
         logger.info("Plotting the mel spectrogram...")
         n_mels = 128
+        # melspectrogram arguments are keyword-only as of librosa 0.10.
         spectrogram = librosa.feature.melspectrogram(
-            input_data,
+            y=input_data,
             sr=sr,
             n_fft=self.n_fft,
             hop_length=self.hop_length,
