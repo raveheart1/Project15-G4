@@ -13,10 +13,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg libsm6 libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-
-RUN pip install -r requirements.txt --disable-pip-version-check --no-cache-dir
-
 COPY . .
+
+# Install the package with the runtime extras (audio pipeline, optional CNN,
+# and cloud integrations). The core install alone omits these heavy stacks.
+RUN pip install . --disable-pip-version-check --no-cache-dir \
+    && pip install ".[audio,ml,cloud]" --disable-pip-version-check --no-cache-dir
 
 CMD ["python3"]

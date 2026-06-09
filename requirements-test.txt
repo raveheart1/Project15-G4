@@ -1,15 +1,4 @@
-# Minimal dependencies for the local unit tests.
-# The full runtime, cloud, audio, and ML stack remains in requirements.txt.
-pytest
-flake8
-pandas>=1.5,<4
-numpy>=1.20
-requests>=2.25,<3
-environs>=9,<15
-Flask>=3.0,<4
-Flask-SQLAlchemy>=3.1,<4
-Flask-Migrate>=4.0,<5
-SQLAlchemy>=2.0,<3
-Werkzeug>=3.0,<4
-Jinja2>=3.1.6
-click>=8.1
+# Dependency definitions are canonical in pyproject.toml.
+# This installs the package (editable) with the lint/test extra only -- the
+# core stack, no cloud/audio/ML. Equivalent to: pip install -e ".[test]"
+-e .[test]

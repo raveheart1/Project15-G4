@@ -94,6 +94,25 @@ we were able to better understand the limits of high frequency and low frequency
 - O'Connell-Rodwell, C.E. et al (2000). Seismic properties of Asian elephant (Elephas maximus) vocalizations and locomotion. Journal of the Acoustic Society of America, 108(6), 3066-3072
 - Heffner, R. S., & Heffner, H. E. (1982). Hearing in the elephant (Elephas maximus): Absolute sensitivity, frequency discrimination, and sound localization. Journal of Comparative and Physiological Psychology, 96(6), 926–944
 
+# Installation
+Dependencies are defined in `pyproject.toml`. The **core** install (web app,
+database, rule-based counting, and the evaluation tools) needs no cloud
+credentials or heavy ML/audio libraries; those are optional extras:
+
+| Extra     | Pulls in                                              |
+|-----------|-------------------------------------------------------|
+| (core)    | Flask, SQLAlchemy, pandas, numpy                      |
+| `audio`   | opencv, librosa, soundfile, matplotlib, scipy, pydub  |
+| `ml`      | TensorFlow, scikit-learn (the optional CNN classifier)|
+| `cloud`   | Azure IoT/Storage, AWS (boto3)                        |
+| `test`    | pytest, flake8                                        |
+
+```bash
+foo@bar:~ pip install .                 # core only
+foo@bar:~ pip install ".[audio,ml,cloud]"  # full runtime (what Docker installs)
+foo@bar:~ pip install -e ".[test]"      # for development + tests
+```
+
 # Local development & testing
 Copy the environment template and fill in any credentials you need (all values
 are optional for local/offline use and default to empty):
@@ -101,13 +120,11 @@ are optional for local/offline use and default to empty):
 foo@bar:~ cp .env.example .env
 ```
 
-The full runtime depends on a heavy cloud/audio/ML stack (`requirements.txt`).
-For quick local validation there is a lightweight test stack and an offline
-unit-test suite that does not require Azure, AWS, audio codecs, or trained
-models:
+The offline unit-test suite does not require Azure, AWS, audio codecs, or
+trained models:
 ```bash
 foo@bar:~ python -m venv .venv && . .venv/bin/activate
-foo@bar:~ pip install -r requirements-test.txt
+foo@bar:~ pip install -e ".[test]"
 foo@bar:~ pytest          # runs unit tests (integration tests are skipped by default)
 foo@bar:~ flake8 elephantcallscounter
 ```

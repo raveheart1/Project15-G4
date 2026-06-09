@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "elephantcallscounter"
+version = "0.2.0"
+description = "Count elephant rumbles in spectrograms of audio recordings (Microsoft Project 15 / Cornell Elephant Listening Project)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+
+# Core dependencies: the web app, database, rule-based counting logic, and the
+# offline evaluation tools. Deliberately free of cloud (Azure/AWS), audio, and
+# heavy ML stacks so the counter can be installed and run without credentials
+# or large dependencies. Those live in the optional extras below.
+dependencies = [
+    "Flask>=3.0,<4",
+    "Flask-SQLAlchemy>=3.1,<4",
+    "Flask-Migrate>=4.0,<5",
+    "Werkzeug>=3.0,<4",
+    "Jinja2>=3.1.6",
+    "SQLAlchemy>=2.0,<3",
+    "alembic>=1.13",
+    "click>=8.1",
+    "environs>=9,<15",
+    "requests>=2.28,<3",
+    "pandas>=2.0,<3",
+    "numpy>=1.23,<2",
+]
+
+[project.optional-dependencies]
+# Spectrogram generation + image processing (segmenting wav -> spectrogram ->
+# monochrome -> boxing). Needed to run the full pipeline on raw audio.
+audio = [
+    "opencv-python>=4.8",
+    "librosa>=0.10,<0.11",
+    "soundfile>=0.12",
+    "noisereduce>=2.0",
+    "matplotlib>=3.6",
+    "scipy>=1.10",
+    "pydub>=0.25",
+    "split-folders>=0.5",
+]
+# Optional CNN classifier (ResNet50 / VGG16). TensorFlow is held below 2.16 to
+# keep Keras 2, which still ships ImageDataGenerator (used by the model code).
+ml = [
+    "tensorflow>=2.13,<2.16",
+    "scikit-learn>=1.3",
+]
+# Azure IoT/Storage and AWS S3 integration.
+cloud = [
+    "azure-iot-device",
+    "azure-eventhub",
+    "azure-storage-queue==12.1.5",
+    "azureml-core",
+    "azureml-dataprep",
+    "boto3>=1.34",
+    "botocore>=1.34",
+]
+# Lint + offline unit tests (no cloud/audio/ML required).
+test = [
+    "pytest<8",
+    "flake8",
+]
+
+[tool.setuptools.packages.find]
+include = ["elephantcallscounter*"]
+
+[tool.setuptools.package-data]
+elephantcallscounter = [
+    "application/templates/*.html",
+    "application/persistence/migrations/**",
+]

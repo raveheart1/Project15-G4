@@ -1,10 +1,13 @@
 import logging
 import math
 import os
+from typing import List, Tuple
 
 from elephantcallscounter.utils.path_utils import get_project_root, join_paths
 
 logger = logging.getLogger(__name__)
+
+Point = Tuple[int, int]
 
 
 class Boxing:
@@ -18,7 +21,7 @@ class Boxing:
         self.write_file = write_file
 
     @staticmethod
-    def is_elephant_rumble(width, height):
+    def is_elephant_rumble(width: int, height: int) -> bool:
         """Whether a bounding box is large enough to be a candidate rumble.
 
         Boxes that are too short or too narrow are treated as noise rather
@@ -31,7 +34,7 @@ class Boxing:
         return height > 5 and width > 50
 
     @staticmethod
-    def count_unique_rumbles(rumbles):
+    def count_unique_rumbles(rumbles: List[Point]) -> List[Point]:
         """Deduplicate rumble centre points into unique elephants.
 
         Two rumbles are considered to come from the same elephant when they

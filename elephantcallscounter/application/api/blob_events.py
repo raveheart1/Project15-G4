@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 def run_processing():
     queue_name = request.args.get("queue_name")
     container_name = request.args.get("container_name")
+    if not queue_name or not container_name:
+        return {
+            "error": "queue_name and container_name are required parameters"
+        }, 400
     audio_events_queue = AudioEventsQueue(queue_name)
     messages = audio_events_queue.dequeue_message_queue()
     azure_interface = AzureInterface(container_name=container_name)
