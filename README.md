@@ -14,7 +14,6 @@ the development team received the challenge of counting the number of elephants 
 
 ## Documentation and Results
 The explanation and results of this research project are captured in the presentation [(PowerPoint)](Project%2015%20Group%204.pptx) [(PDF)](Project%2015%20Group%204.pdf) in this repo.
-There is also a [Video](TODO) explaining the results by the project team.
 
 ## Literature and References
 * https://elephantlisteningproject.org/
@@ -22,7 +21,7 @@ There is also a [Video](TODO) explaining the results by the project team.
 * http://ceciliajarne.web.unq.edu.ar/investigacion/
 
 ## Architecture
-This library is essentially a data pipeline that consists of five main steps:
+This library is essentially a data pipeline that consists of six main steps:
 1. segmenting data: based on metadata files that is created by Cornell University, 
    we create segments of a few seconds that contain 'interesting information'
 2. spectrograms: each data segment is transformed into a 2D image of time vs frequency, a `spectrogram`
@@ -30,6 +29,15 @@ This library is essentially a data pipeline that consists of five main steps:
 4. contours detection: each monochrome image is evaluated with a contour detection algorithm, to distinguish the separate 'objects' which in our case are the elephant rumbles
 5. boxing: for each contour (potential elephant rumble) we calculate the size (height and width) by drawing a box around the contour
 6. counting: we compare the boxes that identify the rumbles to each other in each spectrogram. Based on a few business rules, we count the number of unique elephant rumbles in each image
+
+The count produced by step 6 (the rule-based "boxing" algorithm) is the primary
+output of the pipeline. The repository also includes an **optional** CNN
+classifier (ResNet50 / VGG16, see `elephantcallscounter/models/`) that can be
+trained to predict the elephant count instead. When a trained model is present
+in `elephantcallscounter/binaries/` its predictions override the rule-based
+counts; otherwise the pipeline falls back to the boxing counts. Trained model
+binaries are not committed to this repo — see
+[`elephantcallscounter/binaries/README.md`](elephantcallscounter/binaries/README.md).
 
 ## Data
 The raw data consists of sound files (`.wav` format) of 24 hours.
@@ -85,6 +93,26 @@ we were able to better understand the limits of high frequency and low frequency
 - Stoeger, Angela S. et al (2012). Visualizing Sound Emission of Elephant Vocalizations: Evidence for Two Rumble Production Types.
 - O'Connell-Rodwell, C.E. et al (2000). Seismic properties of Asian elephant (Elephas maximus) vocalizations and locomotion. Journal of the Acoustic Society of America, 108(6), 3066-3072
 - Heffner, R. S., & Heffner, H. E. (1982). Hearing in the elephant (Elephas maximus): Absolute sensitivity, frequency discrimination, and sound localization. Journal of Comparative and Physiological Psychology, 96(6), 926–944
+
+# Local development & testing
+Copy the environment template and fill in any credentials you need (all values
+are optional for local/offline use and default to empty):
+```bash
+foo@bar:~ cp .env.example .env
+```
+
+The full runtime depends on a heavy cloud/audio/ML stack (`requirements.txt`).
+For quick local validation there is a lightweight test stack and an offline
+unit-test suite that does not require Azure, AWS, audio codecs, or trained
+models:
+```bash
+foo@bar:~ python -m venv .venv && . .venv/bin/activate
+foo@bar:~ pip install -r requirements-test.txt
+foo@bar:~ pytest          # runs unit tests (integration tests are skipped by default)
+foo@bar:~ flake8 elephantcallscounter
+```
+Integration tests (which require external services and large assets) are marked
+`integration` and excluded by default via `pytest.ini`.
 
 # Flask APP:
 - To run the code outside docker just skip the 'docker exec -it ecc' part.
