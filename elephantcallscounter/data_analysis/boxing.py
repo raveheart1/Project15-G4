@@ -17,6 +17,43 @@ class Boxing:
         self.monochrome = monochrome
         self.write_file = write_file
 
+    @staticmethod
+    def is_elephant_rumble(width, height):
+        """Whether a bounding box is large enough to be a candidate rumble.
+
+        Boxes that are too short or too narrow are treated as noise rather
+        than elephant rumbles.
+
+        :param int width:
+        :param int height:
+        :return bool:
+        """
+        return height > 5 and width > 50
+
+    @staticmethod
+    def count_unique_rumbles(rumbles):
+        """Deduplicate rumble centre points into unique elephants.
+
+        Two rumbles are considered to come from the same elephant when they
+        share a similar base frequency (x within 20px) or a similar mean time
+        (y within 200px). Rumbles are processed in order and a rumble that is
+        similar to any already-counted elephant is skipped.
+
+        :param list rumbles: list of ``(x, y)`` rumble centre points
+        :return list: the unique elephant centre points, in first-seen order
+        """
+        elephants = []
+        for rumble in rumbles:
+            similar_rumbles = [
+                elephant
+                for elephant in elephants
+                if (abs(elephant[0] - rumble[0]) < 20)
+                or (abs(elephant[1] - rumble[1]) < 200)
+            ]
+            if len(similar_rumbles) < 1:
+                elephants.append(rumble)
+        return elephants
+
     def write_box_to_file(self, image, elephants, image_filename):
         import cv2
 
@@ -71,7 +108,7 @@ class Boxing:
             height = rect[3]
 
             # check if this can be an elephant
-            if height > 5 and width > 50:
+            if self.is_elephant_rumble(width, height):
                 middle_x = math.floor(rect[0] + (width / 2))
                 middle_y = math.floor(rect[1] + (height / 2))
 
@@ -85,27 +122,12 @@ class Boxing:
 
                 elephant_rumbles.append((middle_x, middle_y))
 
-        # count the elephants
-        elephants = []
-        for rumble in elephant_rumbles:
-            # if the rumble has a similar frequency as others, don't count it
-            # if the rumble has a similar mean time as others, don't count it
-            similar_rumbles = list(
-                filter(
-                    lambda elephant: (
-                        (abs(elephant[0] - rumble[0]) < 20)
-                        or (abs(elephant[1] - rumble[1]) < 200)
-                    ),
-                    elephants,
-                )
-            )
-
-            if len(similar_rumbles) < 1:
-                logger.info(f"Unique elephant at {rumble}")
-                elephants.append(rumble)
-                cv2.drawMarker(
-                    ROI, rumble, cv2.COLOR_LAB2LBGR, markerType=cv2.MARKER_STAR
-                )
+        # count the elephants by deduplicating rumbles that likely belong to
+        # the same animal
+        elephants = self.count_unique_rumbles(elephant_rumbles)
+        for rumble in elephants:
+            logger.info(f"Unique elephant at {rumble}")
+            cv2.drawMarker(ROI, rumble, cv2.COLOR_LAB2LBGR, markerType=cv2.MARKER_STAR)
 
         logger.info(f"Found {len(elephants)} elephant(s) in image!")
 
