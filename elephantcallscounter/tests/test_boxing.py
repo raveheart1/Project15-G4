@@ -76,3 +76,29 @@ def test_count_unique_rumbles_compares_against_all_counted():
     # so it is merged -> two unique elephants overall.
     rumbles = [(0, 0), (100, 300), (110, 305)]
     assert Boxing.count_unique_rumbles(rumbles) == [(0, 0), (100, 300)]
+
+
+def test_thresholds_are_tunable():
+    # Two rumbles that the defaults merge (y within 200) become distinct when
+    # the time threshold is tightened -- proves the parameters are configurable.
+    rumbles = [(0, 0), (100, 50)]
+    assert Boxing.count_unique_rumbles(rumbles) == [(0, 0)]
+    assert Boxing.count_unique_rumbles(
+        rumbles, same_frequency_px=20, same_time_px=10
+    ) == [(0, 0), (100, 50)]
+
+    # A box rejected by the default width filter passes with a lower threshold.
+    assert Boxing.is_elephant_rumble(40, 6) is False
+    assert Boxing.is_elephant_rumble(40, 6, min_width=30) is True
+
+
+def test_default_thresholds_unchanged():
+    # Guard the calibrated defaults so a refactor cannot silently shift them.
+    assert (Boxing.MIN_RUMBLE_WIDTH, Boxing.MIN_RUMBLE_HEIGHT) == (50, 5)
+    assert (Boxing.SAME_FREQUENCY_PX, Boxing.SAME_TIME_PX) == (20, 200)
+    assert (
+        Boxing.ROI_TOP,
+        Boxing.ROI_BOTTOM,
+        Boxing.ROI_LEFT,
+        Boxing.ROI_RIGHT,
+    ) == (60, 425, 82, 570)
